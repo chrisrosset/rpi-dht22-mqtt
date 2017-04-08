@@ -5,5 +5,6 @@ config = {
         "host": "localhost"
     },
     "location": "international_space_station",
-    "interval": 10
+    "interval": 10,
+    "average": 5
 }
