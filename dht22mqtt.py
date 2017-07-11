@@ -11,8 +11,8 @@ import config
 def read():
     h, t = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, "4")
     return {
-        "humidity": round(h, 1),
-        "temperature": round(t, 1)
+        "humidity": h,
+        "temperature": t
     }
 
 def timed_read(cfg):
@@ -34,7 +34,7 @@ def on_connect():
     print("Connected with rc=" + str(rc))
 
 def mean(l):
-    return float(sum(l)) / max(len(l), 1)
+    return round(float(sum(l)) / max(len(l), 1), 1)
 
 def main():
 
