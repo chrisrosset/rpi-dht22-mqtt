@@ -4,12 +4,13 @@ ENTRYPOINT []
 RUN apt-get update && \
     apt-get -qy install \
         build-essential \
+        git \
         python-dev \
         python-pip \
         virtualenv
 
 RUN yes | pip install \
-        Adafruit_Python_DHT \
+        git+git://github.com/adafruit/Adafruit_Python_DHT \
         paho-mqtt
 
 RUN mkdir /app
