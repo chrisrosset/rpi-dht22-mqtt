@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
+import logging
+import os
 import platform
+import sys
 import time
+import traceback
 
 import Adafruit_DHT
 import paho.mqtt.client as mqtt
@@ -30,40 +34,58 @@ def publish_mqtt(client, data, cfg):
 def client_id(cfg):
     return platform.node() + "-" + cfg["location"]
 
-def on_connect():
-    print("Connected with rc=" + str(rc))
+def on_connect(client, userdata, flags, rc):
+    logging.info("Connected to the MQTT broker. rc=" + str(rc))
+
+def on_disconnect(client, userdata, rc):
+    logging.info("Disconnected from the MQTT broker. rc=" + str(rc))
 
 def mean(l):
     return round(float(sum(l)) / max(len(l), 1), 1)
 
+def setup_logging():
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                        level=logging.DEBUG)
+    logging.info("Logger set up.")
+
 def main():
+    setup_logging()
 
-    cfg = config.config
+    try:
+        cfg = config.config
 
-    client = mqtt.Client(client_id=client_id(cfg))
-    client.on_connect = on_connect
-    client.connect(cfg["broker"]["host"])
+        logging.info("Read service configuration cfg = %s", str(cfg))
 
-    i = 0
-    samples = cfg["average"]
+        client = mqtt.Client(client_id=client_id(cfg))
+        client.on_connect = on_connect
+        client.on_disconnect = on_disconnect
+        client.connect(cfg["broker"]["host"])
+        client.loop_start()
 
-    running = read()
-    for key in running:
-        running[key] = [running[key]] * samples
+        i = 0
+        samples = cfg["average"]
 
-
-    while True:
-        data = timed_read(cfg)
-
+        running = read(cfg["pin"])
         for key in running:
-            running[key][i] = data[key]
+            running[key] = [running[key]] * samples
 
-        i = (i + 1) % samples
+        while True:
+            data = timed_read(cfg)
 
-        for key in data:
-            data[key] = mean(running[key])
+            for key in running:
+                running[key][i] = data[key]
 
-        publish_mqtt(client, data, cfg)
+            i = (i + 1) % samples
+
+            for key in data:
+                data[key] = mean(running[key])
+
+            publish_mqtt(client, data, cfg)
+
+    except Exception as e:
+        logging.error("Exception thrown.", exc_info=1)
+        logging.info("Terminating process.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
