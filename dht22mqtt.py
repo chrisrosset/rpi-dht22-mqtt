@@ -8,8 +8,8 @@ import paho.mqtt.client as mqtt
 
 import config
 
-def read():
-    h, t = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, "4")
+def read(pin):
+    h, t = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, pin)
     return {
         "humidity": h,
         "temperature": t
@@ -17,7 +17,7 @@ def read():
 
 def timed_read(cfg):
     time.sleep(cfg["interval"])
-    return read()
+    return read(cfg["pin"])
 
 def mqtt_topic(key, location):
     return "/{0}/{1}".format(key, location)

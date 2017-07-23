@@ -6,5 +6,6 @@ config = {
     },
     "location": "international_space_station",
     "interval": 10,
-    "average": 5
+    "average": 5,
+    "pin": 4
 }
